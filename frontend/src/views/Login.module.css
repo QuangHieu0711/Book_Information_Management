@@ -1,0 +1,188 @@
+.wrapper {
+  display: flex;
+  height: 100vh;
+  background: #ffffff; /* cả 2 bên cùng màu */
+}
+
+.left,
+.right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.left {
+  background: #ffffff; /* đồng bộ nền */
+}
+
+.left img {
+  max-width: 75%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.right {
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formBox {
+  width: 100%;
+  max-width: 460px; /* rộng hơn */
+  padding: 2.5rem;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d6efd;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.subText {
+  text-align: center;
+  font-size: 0.95rem;
+  margin-bottom: 1.8rem;
+}
+
+.subText a {
+  color: #0d6efd;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.subText a:hover {
+  text-decoration: underline;
+}
+
+/* Input */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.2rem;
+}
+
+.inputGroup label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.inputGroup input {
+  padding: 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.inputGroup input:focus {
+  border-color: #0d6efd;
+  outline: none;
+}
+
+/* Options */
+.options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.checkbox {
+  font-size: 0.85rem;
+}
+
+.forgot {
+  font-size: 0.85rem;
+  color: #0d6efd;
+  text-decoration: none;
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}
+
+/* Button */
+.btnPrimary {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: #0d6efd;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btnPrimary:hover {
+  background: #0b5ed7;
+}
+
+/* Or */
+.orText {
+  text-align: center;
+  margin: 1.8rem 0 1.2rem;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Social buttons */
+.socials {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.socialBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.socialBtn:hover {
+  transform: scale(1.1);
+}
+
+.google {
+  background: #ea4335;
+}
+
+.facebook {
+  background: #1877f2;
+}
+
+.github {
+  background: #24292f;
+}
+
+@media (max-width: 768px) {
+  .wrapper {
+    flex-direction: column;
+  }
+  .left,
+  .right {
+    flex: none;
+    width: 100%;
+    height: 50vh;
+  }
+  .left img {
+    max-width: 60%;
+  }
+}

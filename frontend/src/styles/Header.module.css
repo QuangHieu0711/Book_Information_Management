@@ -1,0 +1,153 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 278px;
+    /* Sidebar rộng 270px */
+    width: calc(100vw - 275px);
+    height: 65px;
+    /* Bằng với sidebar-logo */
+    background: #fff;
+    z-index: 100;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px 0 32px;
+    /* Padding trái PHẢI đủ lớn để cách lề sidebar, chỉnh lại nếu cần */
+    box-sizing: border-box;
+}
+
+.left {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1a1919;
+    letter-spacing: 0.5px;
+    margin-left: 0;
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+/* Bell icon + notification */
+.bellBtn {
+    position: relative;
+    background: #EBEEF6;
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.bellBtn:focus,
+.bellBtn:active,
+.bellBtn:hover {
+    outline: none;
+    box-shadow: none;
+    border: none;
+}
+
+.bellIcon {
+    font-size: 20px;
+    color: #666;
+}
+
+.notificationCount {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 50%;
+    background-color: #ff4757;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #fff;
+    border: none;
+}
+
+/* User info + dropdown */
+.userWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+.userBtn {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    height: 40px;
+}
+
+.avatar {
+    border-radius: 8px;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.username {
+    font-weight: 600;
+    font-size: 13px;
+    color: #333;
+    margin-right: 6px;
+}
+
+.chevron {
+    font-size: 12px;
+    color: #666;
+}
+
+.dropdownMenu {
+    position: absolute;
+    top: 46px;
+    right: 0;
+    background: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 170px;
+    z-index: 1000;
+    padding: 4px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdownItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dropdownItem:hover {
+    background: #f5f5f5;
+}

@@ -1,0 +1,64 @@
+.sidebar {
+  width: 270px;
+  background: #1e429f;
+  color: #fff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+}
+
+.sidebar-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  height: 56px;
+  padding: 0;
+  border-bottom: 1px solid #2e4fa2;
+  margin-bottom: 0;
+}
+
+.logo-image {
+  height: 100%;
+  width: auto;
+  max-width: 90%;      /* Không bị tràn chiều ngang */
+  object-fit: contain;
+  display: block;
+}
+
+/* Các phần còn lại giữ nguyên */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  flex: 1;
+}
+
+.sidebar-menu>li {
+  padding: 0;
+  margin-bottom: 2px;
+}
+
+.menu-link-standalone {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+  font-weight: bold;
+  font-size: 15px;
+  padding: 13px 22px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.menu-link-standalone:hover {
+  color: #90c3ff;
+}
+
+.menu-link-standalone.active {
+  background-color: #fff;
+  color: #1e429f !important;
+  box-shadow: inset 4px 0 0 #1e429f, inset -4px 0 0 #1e429f;
+  font-weight: bold;
+  padding: 13px 22px;
+}
