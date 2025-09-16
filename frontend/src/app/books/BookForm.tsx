@@ -15,17 +15,18 @@ export type BookFormData = {
   language: string
 }
 
-type Option = {
-  id: string | number
-  name: string
-}
+type Option = { id: string; name: string }
 
 const LANGUAGE_OPTIONS: Option[] = [
   { id: 'Tiếng Việt', name: 'Tiếng Việt' },
   { id: 'Tiếng Anh', name: 'Tiếng Anh' },
   { id: 'Tiếng Trung', name: 'Tiếng Trung' },
   { id: 'Tiếng Nhật', name: 'Tiếng Nhật' },
-  { id: 'Tiếng Pháp', name: 'Tiếng Pháp' }
+  { id: 'Tiếng Pháp', name: 'Tiếng Pháp' },
+  { id: 'Tiếng Đức', name: 'Tiếng Đức' },
+  { id: 'Tiếng Tây Ban Nha', name: 'Tiếng Tây Ban Nha' },
+  { id: 'Tiếng Hàn', name: 'Tiếng Hàn' },
+  { id: 'Tiếng Ý', name: 'Tiếng Ý' },
 ]
 
 export default function BookForm({
@@ -54,35 +55,43 @@ export default function BookForm({
     description: '',
     language: ''
   })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: boolean }>({})
 
-  // Fetch options
+  // fetch dropdown options
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [authorRes, categoryRes, publisherRes] = await Promise.all([
+        const [aRes, cRes, pRes] = await Promise.all([
           fetch('/api/authors', { credentials: 'include' }),
           fetch('/api/categories', { credentials: 'include' }),
           fetch('/api/publishers', { credentials: 'include' })
         ])
-        const authorJson = await authorRes.json()
-        const categoryJson = await categoryRes.json()
-        const publisherJson = await publisherRes.json()
+        const [aJson, cJson, pJson] = await Promise.all([
+          aRes.json(),
+          cRes.json(),
+          pRes.json()
+        ])
+
         setAuthors(
-          Array.isArray(authorJson.data)
-            ? authorJson.data.map((a: any) => ({ id: String(a.id), name: a.authorname }))
-            : []
+          (aJson.data || []).map((a: any) => ({
+            id: String(a.id),
+            name: a.authorname
+          }))
         )
         setCategories(
-          Array.isArray(categoryJson.data)
-            ? categoryJson.data.map((c: any) => ({ id: String(c.id), name: c.categoryname }))
-            : []
+          (cJson.data || []).map((c: any) => ({
+            id: String(c.id),
+            name: c.categoryname
+          }))
         )
         setPublishers(
-          Array.isArray(publisherJson.data)
-            ? publisherJson.data.map((p: any) => ({ id: String(p.id), name: p.publisherName }))
-            : []
+          (pJson.data || []).map((p: any) => ({
+            id: String(p.id),
+            name: p.publisherName
+          }))
         )
       } catch (err) {
         setAuthors([])
@@ -93,16 +102,9 @@ export default function BookForm({
     fetchOptions()
   }, [])
 
-  // Set form state when options and book are ready
+  // reset form
   useEffect(() => {
-    if (
-      mode === 'edit' &&
-      book &&
-      authors.length > 0 &&
-      categories.length > 0 &&
-      publishers.length > 0
-    ) {
-      // Map and convert id fields to string!
+    if (mode === 'edit' && book) {
       setForm({
         id: book.id,
         title: book.title,
@@ -115,8 +117,7 @@ export default function BookForm({
         description: book.description,
         language: book.language || ''
       })
-    }
-    if (mode === 'add') {
+    } else if (mode === 'add') {
       setForm({
         title: '',
         authorId: '',
@@ -129,42 +130,69 @@ export default function BookForm({
         language: ''
       })
     }
-  }, [book, mode, authors, categories, publishers])
+    setError(null)
+    setFieldErrors({})
+  }, [mode, book])
 
-  // Optional: Debug log
-  useEffect(() => {
-    if (mode === 'edit') {
-      console.log('Book prop:', book)
-      console.log('Authors:', authors)
-      console.log('Categories:', categories)
-      console.log('Publishers:', publishers)
-      console.log('Form state:', form)
+  // validate từng trường
+  const validateForm = () => {
+    const errs: { [key: string]: boolean } = {}
+    if (!form.title.trim()) errs.title = true
+    if (!form.authorId) errs.authorId = true
+    if (!form.categoryId) errs.categoryId = true
+    if (!form.publisherId) errs.publisherId = true
+    if (!form.yearPublished || form.yearPublished < 1900) errs.yearPublished = true
+    if (!form.price || form.price < 0) errs.price = true
+    if (!form.quantity || form.quantity < 1) errs.quantity = true
+    if (!form.language) errs.language = true
+    if (!form.description.trim()) errs.description = true
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      setError('Vui lòng nhập và chọn đầy đủ thông tin!')
+      return false
     }
-  }, [form, book, authors, categories, publishers, mode])
+    setError(null)
+    return true
+  }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
     setForm(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'quantity' || name === 'yearPublished' ? Number(value) : value
+      [name]: ['price', 'quantity', 'yearPublished'].includes(name)
+        ? Number(value)
+        : value
     }))
+    // reset lỗi trường khi nhập
+    setFieldErrors(prev => ({ ...prev, [name]: false }))
+    setError(null)
   }
-
-  const isEdit = mode === 'edit'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validateForm()) return
+
     setLoading(true)
-    setError(null)
     try {
-      const res = await fetch(mode === 'add' ? '/api/books' : `/api/books/${book?.id}`, {
-        method: mode === 'add' ? 'POST' : 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(form)
-      })
+      const payload = {
+        ...form,
+        authorId: form.authorId ? Number(form.authorId) : null,
+        categoryId: form.categoryId ? Number(form.categoryId) : null,
+        publisherId: form.publisherId ? Number(form.publisherId) : null
+      }
+
+      const res = await fetch(
+        mode === 'add' ? '/api/books' : `/api/books/${book?.id}`,
+        {
+          method: mode === 'add' ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        }
+      )
+
       const json = await res.json()
       if (json.status) {
         onSuccess()
@@ -179,54 +207,61 @@ export default function BookForm({
     }
   }
 
-  const groupGap = 24 // px
+  const groupGap = 24
 
   return (
     <div className={modalStyles['modal-overlay']}>
       <div className={modalStyles['modal-content']}>
         <div className={modalStyles['modal-title-bar']}>
-          <div className={modalStyles['modal-title']}>{isEdit ? 'SỬA SÁCH' : 'THÊM SÁCH MỚI'}</div>
-          <button type='button' className={modalStyles['close-btn']} onClick={onClose}>
+          <div className={modalStyles['modal-title']}>
+            {mode === 'edit' ? 'SỬA SÁCH' : 'THÊM SÁCH MỚI'}
+          </div>
+          <button
+            type='button'
+            className={modalStyles['close-btn']}
+            onClick={onClose}
+          >
             ×
           </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ fontFamily: 'inherit' }}>
-          {/* TÊN SÁCH */}
+
+        <form onSubmit={handleSubmit} style={{ fontFamily: 'inherit' }} noValidate>
+          {/* Tên sách */}
           <div className={modalStyles['form-group']} style={{ marginBottom: groupGap }}>
             <label className={modalStyles['form-label']}>
               Tên sách <span style={{ color: '#e53935' }}>*</span>
             </label>
             <input
-              className={modalStyles['input']}
+              className={`${modalStyles['input']} ${fieldErrors.title ? modalStyles['input-error'] : ''}`}
               name='title'
               value={form.title}
               onChange={handleChange}
               maxLength={255}
-              required
-              style={{ width: '100%' }}
               placeholder='Nhập tên sách...'
             />
           </div>
+
+          {/* Grid */}
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               columnGap: groupGap,
-              marginBottom: groupGap,
-              alignItems: 'start'
+              marginBottom: groupGap
             }}
           >
+            {/* Left */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: groupGap }}>
+              {/* Tác giả */}
               <div className={modalStyles['form-group']}>
                 <label className={modalStyles['form-label']}>
                   Tác giả <span style={{ color: '#e53935' }}>*</span>
                 </label>
                 <select
-                  className={modalStyles['input']}
+                  className={`${modalStyles['input']} ${fieldErrors.authorId ? modalStyles['input-error'] : ''}`}
                   name='authorId'
                   value={form.authorId}
                   onChange={handleChange}
-                  required
                 >
                   <option value=''>-- Chọn tác giả --</option>
                   {authors.map(a => (
@@ -236,16 +271,17 @@ export default function BookForm({
                   ))}
                 </select>
               </div>
+
+              {/* Thể loại */}
               <div className={modalStyles['form-group']}>
                 <label className={modalStyles['form-label']}>
                   Thể loại <span style={{ color: '#e53935' }}>*</span>
                 </label>
                 <select
-                  className={modalStyles['input']}
+                  className={`${modalStyles['input']} ${fieldErrors.categoryId ? modalStyles['input-error'] : ''}`}
                   name='categoryId'
                   value={form.categoryId}
                   onChange={handleChange}
-                  required
                 >
                   <option value=''>-- Chọn thể loại --</option>
                   {categories.map(c => (
@@ -255,32 +291,35 @@ export default function BookForm({
                   ))}
                 </select>
               </div>
+
+              {/* Giá */}
               <div className={modalStyles['form-group']}>
                 <label className={modalStyles['form-label']}>
                   Giá (VNĐ) <span style={{ color: '#e53935' }}>*</span>
                 </label>
                 <input
-                  className={modalStyles['input']}
+                  className={`${modalStyles['input']} ${fieldErrors.price ? modalStyles['input-error'] : ''}`}
                   name='price'
                   type='number'
                   min={0}
                   value={form.price}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
+
+            {/* Right */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: groupGap }}>
+              {/* NXB */}
               <div className={modalStyles['form-group']}>
                 <label className={modalStyles['form-label']}>
                   Nhà xuất bản <span style={{ color: '#e53935' }}>*</span>
                 </label>
                 <select
-                  className={modalStyles['input']}
+                  className={`${modalStyles['input']} ${fieldErrors.publisherId ? modalStyles['input-error'] : ''}`}
                   name='publisherId'
                   value={form.publisherId}
                   onChange={handleChange}
-                  required
                 >
                   <option value=''>-- Chọn NXB --</option>
                   {publishers.map(p => (
@@ -290,49 +329,50 @@ export default function BookForm({
                   ))}
                 </select>
               </div>
+
+              {/* Năm xuất bản */}
               <div className={modalStyles['form-group']}>
                 <label className={modalStyles['form-label']}>
                   Năm xuất bản <span style={{ color: '#e53935' }}>*</span>
                 </label>
                 <input
-                  className={modalStyles['input']}
+                  className={`${modalStyles['input']} ${fieldErrors.yearPublished ? modalStyles['input-error'] : ''}`}
                   name='yearPublished'
                   type='number'
                   min={1900}
                   max={3000}
                   value={form.yearPublished}
                   onChange={handleChange}
-                  required
-                  placeholder='2024'
                 />
               </div>
+
+              {/* Số lượng */}
               <div className={modalStyles['form-group']}>
                 <label className={modalStyles['form-label']}>
                   Số lượng <span style={{ color: '#e53935' }}>*</span>
                 </label>
                 <input
-                  className={modalStyles['input']}
+                  className={`${modalStyles['input']} ${fieldErrors.quantity ? modalStyles['input-error'] : ''}`}
                   name='quantity'
                   type='number'
                   min={1}
                   value={form.quantity}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
           </div>
+
+          {/* Ngôn ngữ */}
           <div className={modalStyles['form-group']} style={{ marginBottom: groupGap }}>
             <label className={modalStyles['form-label']}>
               Ngôn ngữ <span style={{ color: '#e53935' }}>*</span>
             </label>
             <select
-              className={modalStyles['input']}
+              className={`${modalStyles['input']} ${fieldErrors.language ? modalStyles['input-error'] : ''}`}
               name='language'
               value={form.language}
               onChange={handleChange}
-              required
-              style={{ width: '100%' }}
             >
               <option value=''>-- Chọn ngôn ngữ --</option>
               {LANGUAGE_OPTIONS.map(lang => (
@@ -342,28 +382,33 @@ export default function BookForm({
               ))}
             </select>
           </div>
+
+          {/* Mô tả */}
           <div className={modalStyles['form-group']} style={{ marginBottom: groupGap }}>
-            <label className={modalStyles['form-label']} style={{ fontWeight: 500 }}>
-              Mô tả
+            <label className={modalStyles['form-label']}>
+              Mô tả <span style={{ color: '#e53935' }}>*</span>
             </label>
             <textarea
-              className={modalStyles['input']}
+              className={`${modalStyles['input']} ${fieldErrors.description ? modalStyles['input-error'] : ''}`}
               name='description'
               value={form.description}
               onChange={handleChange}
               rows={4}
-              style={{ width: '100%', fontFamily: 'inherit', fontSize: 16 }}
-              placeholder='Nhập mô tả về nội dung, tác giả, và các thông tin khác về cuốn sách...'
+              placeholder='Nhập mô tả về cuốn sách...'
             />
           </div>
-          {error && <div className={modalStyles['error-message']}>{error}</div>}
+
+          {error && (
+            <div className={modalStyles['error-message']}>{error}</div>
+          )}
+
+          {/* Footer */}
           <div className={modalStyles['form-footer']}>
             <button
               type='button'
               className={modalStyles['btn-cancel']}
               onClick={onClose}
               disabled={loading}
-              style={{ fontFamily: 'inherit' }}
             >
               Hủy bỏ
             </button>
@@ -371,9 +416,8 @@ export default function BookForm({
               type='submit'
               className={modalStyles['btn-confirm']}
               disabled={loading}
-              style={{ fontFamily: 'inherit' }}
             >
-              {loading ? (isEdit ? 'Đang xác nhận...' : 'Đang xác nhận...') : isEdit ? 'Xác nhận' : 'Xác nhận'}
+              {loading ? 'Đang xác nhận...' : 'Xác nhận'}
             </button>
           </div>
         </form>

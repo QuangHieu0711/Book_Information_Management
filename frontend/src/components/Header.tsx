@@ -13,6 +13,7 @@ const pageTitles: Record<string, string> = {
   '/books': 'QUẢN LÝ SÁCH',
   '/categories': 'QUẢN LÝ THỂ LOẠI',
   '/publishers': 'QUẢN LÝ NHÀ XUẤT BẢN',
+  '/borrow-return': 'QUẢN LÝ MƯỢN - TRẢ SÁCH',
   '/accounts': 'QUẢN LÝ TÀI KHOẢN',
 };
 

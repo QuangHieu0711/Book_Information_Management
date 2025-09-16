@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import book.backend.models.dtos.auth.LoginRequest;
 import book.backend.models.dtos.auth.TokenResponse;
 import book.backend.models.global.ApiResult;
+import book.backend.models.security.UserPrincipal;
 import book.backend.services.interfaces.ITokenService;
-
 
 @RestController
 @RequestMapping("/api/auth")
@@ -43,15 +43,29 @@ public class AuthController extends ApiBaseController {
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            TokenResponse tokens = tokenService.generateTokens(userDetails);
 
-            // Tạo cookie accessToken
+            // Lấy role (ví dụ lấy role đầu tiên)
+            String role = userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("USER");
+
+            // Lấy fullName từ UserPrincipal
+            String fullName = "";
+            if (userDetails instanceof UserPrincipal) {
+                fullName = ((UserPrincipal) userDetails).getFullName();
+            }
+
+            TokenResponse tokens = tokenService.generateTokens(userDetails);
+            tokens.setRole(role);
+            tokens.setFullName(fullName);
+
             ResponseCookie cookie = ResponseCookie.from("authToken", tokens.getAccessToken())
-                .httpOnly(true)   // chỉ server đọc
-                .secure(false)     
+                .httpOnly(true)
+                .secure(false)
                 .path("/")
                 .sameSite("Lax")
-                .maxAge(7 * 24 * 60 * 60) // 7 ngày
+                .maxAge(7 * 24 * 60 * 60)
                 .build();
 
             return ResponseEntity.ok()

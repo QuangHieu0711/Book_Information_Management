@@ -4,17 +4,17 @@ import React, { useEffect, useState } from 'react'
 import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
 import listStyles from '../../styles/List.module.css'
 import deleteModalStyles from '../../styles/DeleteModal.module.css'
-import BookForm, { BookFormData } from './BookForm'
-import BookDetailModal from './BookDetailModal'
+import BorrowForm, { BorrowFormData } from './BorrowForm'
+import BorrowDetailModal from './BorrowDetailModal'
 import Toast from '../../components/Toast'
 
-function DeleteBookModal({
-  bookTitle,
+function DeleteBorrowModal({
+  borrowInfo,
   onClose,
   onConfirm,
   loading,
 }: {
-  bookTitle: string
+  borrowInfo: string
   onClose: () => void
   onConfirm: () => void
   loading: boolean
@@ -29,7 +29,7 @@ function DeleteBookModal({
           </button>
         </div>
         <div style={{ margin: '24px 0', fontSize: 16 }}>
-          Bạn có chắc chắn muốn xóa sách <b>{bookTitle}</b>?
+          Bạn có chắc chắn muốn xóa phiếu mượn <b>{borrowInfo}</b>?
         </div>
         <div className={deleteModalStyles['form-footer']}>
           <button type="button" onClick={onClose} className={deleteModalStyles['btn-cancel']}>
@@ -49,29 +49,25 @@ function DeleteBookModal({
   )
 }
 
-// Kiểu dữ liệu trả về từ API /api/books (đã resolve tên author/category/publisher)
-type Book = {
+// Kiểu dữ liệu trả về từ API /api/borrows (đã resolve thông tin user và chi tiết)
+type Borrow = {
   id: number
-  title: string
-  author: string
-  authorId: number
-  category: string
-  categoryId: number
-  publisher: string
-  publisherId: number
-  yearPublished: number
-  price: number
-  quantity: number
-  description: string
-  language: string
+  userName: string
+  userId: number
+  borrowDate: string
+  returnDate: string
+  actualReturnDate: string
+  status: string // "MUON", "DA TRA"
   createdAt: string
+  totalBooks: number // Tổng số sách trong phiếu
+  totalQuantity: number // Tổng số lượng mượn
+  bookTitles: string[] // Danh sách tên sách ngắn gọn
 }
-
 
 const PAGE_SIZE = 10
 
-function BookListContent() {
-  const [books, setBooks] = useState<Book[]>([])
+function BorrowListContent() {
+  const [borrows, setBorrows] = useState<Borrow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -79,27 +75,27 @@ function BookListContent() {
 
   // State cho modal form
   const [showAdd, setShowAdd] = useState(false)
-  const [editBook, setEditBook] = useState<BookFormData | null>(null)
-  const [viewBook, setViewBook] = useState<Book | null>(null)
+  const [editBorrow, setEditBorrow] = useState<BorrowFormData | null>(null)
+  const [viewBorrow, setViewBorrow] = useState<Borrow | null>(null)
 
   // State cho modal xóa
-  const [deleteBook, setDeleteBook] = useState<Book | null>(null)
+  const [deleteBorrow, setDeleteBorrow] = useState<Borrow | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Thông báo thành công
   const [toast, setToast] = useState<{ message: string, type?: 'success' | 'error' } | null>(null)
 
-  // Lấy danh sách sách
-  const fetchBooks = async () => {
+  // Lấy danh sách phiếu mượn
+  const fetchBorrows = async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/books', { credentials: 'include' })
+      const res = await fetch('/api/borrow-return/borrows', { credentials: 'include' })
       const json = await res.json()
       if (json.status && Array.isArray(json.data)) {
-        setBooks(json.data)
+        setBorrows(json.data)
       } else {
-        setError(json.userMessage || 'Lỗi lấy danh sách sách')
+        setError(json.userMessage || 'Lỗi lấy danh sách phiếu mượn')
       }
     } catch (err) {
       setError('Không thể kết nối tới server.')
@@ -109,61 +105,58 @@ function BookListContent() {
   }
 
   useEffect(() => {
-    fetchBooks()
+    fetchBorrows()
   }, [])
 
   // Sắp xếp theo thời gian tạo (createdAt) mới nhất lên đầu
-  const sortedBooks = [...books].sort(
+  const sortedBorrows = [...borrows].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
-  // Filter books by title, author, category, publisher, language
-  const filtered = sortedBooks.filter(book =>
-    book.title.toLowerCase().includes(search.toLowerCase()) ||
-    book.author.toLowerCase().includes(search.toLowerCase()) ||
-    book.category.toLowerCase().includes(search.toLowerCase()) ||
-    book.publisher.toLowerCase().includes(search.toLowerCase()) ||
-    book.language.toLowerCase().includes(search.toLowerCase())
+  // Filter borrows by user name, status, book titles
+  const filtered = sortedBorrows.filter(borrow =>
+    borrow.userName.toLowerCase().includes(search.toLowerCase()) ||
+    borrow.status.toLowerCase().includes(search.toLowerCase()) ||
+    borrow.bookTitles.some(title => 
+      title.toLowerCase().includes(search.toLowerCase())
+    )
   )
 
   // Paging
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
-  const pagedBooks = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const pagedBorrows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const handleView = (book: Book) => {
-    setViewBook(book)
+  const handleView = (borrow: Borrow) => {
+    setViewBorrow(borrow)
   }
 
-    const handleEdit = (book: Book) => {
-    setEditBook({
-        id: book.id,
-        title: book.title,
-        authorId: String(book.authorId),      
-        categoryId: String(book.categoryId),
-        publisherId: String(book.publisherId),
-        yearPublished: book.yearPublished,
-        price: book.price,
-        quantity: book.quantity,
-        description: book.description,
-        language: book.language,
+  const handleEdit = (borrow: Borrow) => {
+    setEditBorrow({
+      id: borrow.id,
+      userId: String(borrow.userId),
+      borrowDate: borrow.borrowDate,
+      returnDate: borrow.returnDate,
+      status: borrow.status,
     })
-    }
+  }
 
-
-  const handleDeleteClick = (book: Book) => {
-    setDeleteBook(book)
+  const handleDeleteClick = (borrow: Borrow) => {
+    setDeleteBorrow(borrow)
   }
 
   const handleDeleteConfirm = async () => {
-    if (!deleteBook) return
+    if (!deleteBorrow) return
     setDeleteLoading(true)
     try {
-      const res = await fetch(`/api/books/${deleteBook.id}`, { method: 'DELETE', credentials: 'include' })
+      const res = await fetch(`/api/borrows/${deleteBorrow.id}`, { 
+        method: 'DELETE', 
+        credentials: 'include' 
+      })
       const json = await res.json()
       if (json.status) {
-        setDeleteBook(null)
-        fetchBooks()
-        setToast({ message: 'Xóa sách thành công', type: 'success' })
+        setDeleteBorrow(null)
+        fetchBorrows()
+        setToast({ message: 'Xóa phiếu mượn thành công', type: 'success' })
       } else {
         setToast({ message: json.userMessage || 'Xóa thất bại', type: 'error' })
       }
@@ -182,8 +175,22 @@ function BookListContent() {
   }, [search])
 
   const handleSuccess = (msg: string) => {
-    fetchBooks()
+    fetchBorrows()
     setToast({ message: msg, type: 'success' })
+  }
+
+  // Format status
+  const getStatusBadge = (status: string) => {
+    const badgeClass = status === 'MUON' 
+      ? listStyles['status-muon'] 
+      : listStyles['status-da-tra']
+    const badgeText = status === 'MUON' ? 'MƯỢN' : 'ĐÃ TRẢ'
+    return <span className={badgeClass}>{badgeText}</span>
+  }
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return dateString ? new Date(dateString).toLocaleDateString('vi-VN') : ''
   }
 
   if (loading) return <div>Đang tải...</div>
@@ -193,12 +200,12 @@ function BookListContent() {
     <div className={listStyles['list-container']}>
       <div className={listStyles['list-toolbar']}>
         <button className={listStyles['list-add-btn']} onClick={() => setShowAdd(true)}>
-          + Thêm sách
+          + Thêm phiếu mượn
         </button>
         <input
           type="text"
           className={listStyles['list-search']}
-          placeholder="Tìm kiếm tên sách, tác giả, thể loại..."
+          placeholder="Tìm kiếm theo tên người mượn, trạng thái, sách..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -207,37 +214,47 @@ function BookListContent() {
         <thead>
           <tr>
             <th className={listStyles['stt-header']}>STT</th>
-            <th>Tên sách</th>
-            <th>Tác giả</th>
-            <th>Thể loại</th>
-            <th>NXB</th>
-            <th>Năm XB</th>
-            <th>Giá</th>
-            <th>Số lượng</th>
-            <th>Ngôn ngữ</th>
+            <th>Mã phiếu</th>
+            <th>Người mượn</th>
+            <th>Ngày mượn</th>
+            <th>Ngày hẹn trả</th>
+            <th>Ngày trả thực tế</th>
+            <th>Trạng thái</th>
+            <th>Số sách</th>
+            <th>Tổng số lượng</th>
+            <th>Sách mượn</th>
             <th>Ngày tạo</th>
             <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {pagedBooks.length === 0 ? (
+          {pagedBorrows.length === 0 ? (
             <tr>
-              <td colSpan={11} style={{ textAlign: 'center', padding: 24 }}>
-                Không có sách nào.
+              <td colSpan={12} style={{ textAlign: 'center', padding: 24 }}>
+                Không có phiếu mượn nào.
               </td>
             </tr>
           ) : (
-            pagedBooks.map((b, idx) => (
+            pagedBorrows.map((b, idx) => (
               <tr key={b.id}>
                 <td>{(page - 1) * PAGE_SIZE + idx + 1}</td>
-                <td>{b.title}</td>
-                <td>{b.author}</td>
-                <td>{b.category}</td>
-                <td>{b.publisher}</td>
-                <td>{b.yearPublished}</td>
-                <td>{b.price.toLocaleString()}₫</td>
-                <td>{b.quantity}</td>
-                <td>{b.language}</td>
+                <td>PM-{b.id.toString().padStart(4, '0')}</td>
+                <td>{b.userName}</td>
+                <td>{formatDate(b.borrowDate)}</td>
+                <td>{formatDate(b.returnDate)}</td>
+                <td>{formatDate(b.actualReturnDate)}</td>
+                <td>{getStatusBadge(b.status)}</td>
+                <td>{b.totalBooks}</td>
+                <td>{b.totalQuantity}</td>
+                <td>
+                  <div style={{ maxWidth: 200, overflow: 'hidden' }}>
+                    {b.bookTitles.map((title, i) => (
+                      <div key={i} style={{ fontSize: 14, color: '#64748b' }}>
+                        • {title}
+                      </div>
+                    ))}
+                  </div>
+                </td>
                 <td>{b.createdAt ? b.createdAt.substring(0, 10) : ''}</td>
                 <td>
                   <button
@@ -289,32 +306,32 @@ function BookListContent() {
       </div>
       {/* Modal form */}
       {showAdd && (
-        <BookForm
+        <BorrowForm
           mode="add"
           onClose={() => setShowAdd(false)}
-          onSuccess={() => handleSuccess('Thêm sách thành công')}
+          onSuccess={() => handleSuccess('Thêm phiếu mượn thành công')}
         />
       )}
-      {editBook && (
-        <BookForm
+      {editBorrow && (
+        <BorrowForm
           mode="edit"
-          book={editBook}
-          onClose={() => setEditBook(null)}
-          onSuccess={() => handleSuccess('Cập nhật sách thành công')}
+          borrow={editBorrow}
+          onClose={() => setEditBorrow(null)}
+          onSuccess={() => handleSuccess('Cập nhật phiếu mượn thành công')}
         />
       )}
-      {deleteBook && (
-        <DeleteBookModal
-          bookTitle={deleteBook.title}
+      {deleteBorrow && (
+        <DeleteBorrowModal
+          borrowInfo={`PM-${deleteBorrow.id} - ${deleteBorrow.userName}`}
           loading={deleteLoading}
-          onClose={() => setDeleteBook(null)}
+          onClose={() => setDeleteBorrow(null)}
           onConfirm={handleDeleteConfirm}
         />
       )}
-      {viewBook && (
-        <BookDetailModal
-          book={viewBook}
-          onClose={() => setViewBook(null)}
+      {viewBorrow && (
+        <BorrowDetailModal
+          borrow={viewBorrow}
+          onClose={() => setViewBorrow(null)}
         />
       )}
       {toast && (
@@ -328,10 +345,10 @@ function BookListContent() {
   )
 }
 
-export default function BookListPage() {
+export default function BorrowListPage() {
   return (
     <DashboardLayout>
-      <BookListContent />
+      <BorrowListContent />
     </DashboardLayout>
   )
 }

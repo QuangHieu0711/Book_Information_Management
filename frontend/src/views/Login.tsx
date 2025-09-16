@@ -16,10 +16,12 @@ export default function LoginPage() {
 
   // Nếu đã đăng nhập, tự động chuyển hướng sang dashboard
   useEffect(() => {
-    if (typeof window !== "undefined" && document.cookie.includes("authToken=")) {
+    if (typeof window !== 'undefined' && document.cookie.includes('authToken=')) {
+      // Gọi API lấy user info nếu muốn điều hướng theo role
+      // Hoặc đơn giản chuyển hướng mặc định
       window.location.href = '/dashboard'
     }
-  }, []) // <-- dùng dependency rỗng
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +29,15 @@ export default function LoginPage() {
     try {
       const res = await login(username, password)
       if (res?.status) {
-        window.location.href = "/dashboard"
+        // Đã đăng nhập thành công, điều hướng theo role (nếu có)
+        const role = res.data?.role
+        if (role === 'ROLE_ADMIN') {
+          window.location.href = '/dashboard'
+        } else if (role === 'ROLE_USER' || role === 'ROLE_user') {
+          window.location.href = '/user-dashboard'
+        } else {
+          window.location.href = '/' // fallback cho các role khác
+        }
       } else {
         alert(res.userMessage || 'Đăng nhập thất bại. Vui lòng thử lại!')
       }
@@ -60,6 +70,8 @@ export default function LoginPage() {
                 required
                 value={username}
                 onChange={e => setUsername(e.target.value)}
+                autoComplete='username'
+                disabled={loading}
               />
             </div>
             <div className={styles.inputGroup} style={{ position: 'relative' }}>
@@ -71,6 +83,8 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                autoComplete='current-password'
+                disabled={loading}
               />
               <span
                 onClick={() => setShowPassword(!showPassword)}
@@ -81,13 +95,21 @@ export default function LoginPage() {
                   cursor: 'pointer',
                   color: '#666'
                 }}
+                tabIndex={0}
+                role='button'
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
             </div>
             <div className={styles.options}>
               <label className={styles.checkbox}>
-                <input type='checkbox' checked={remember} onChange={e => setRemember(e.target.checked)} />
+                <input
+                  type='checkbox'
+                  checked={remember}
+                  onChange={e => setRemember(e.target.checked)}
+                  disabled={loading}
+                />
                 Ghi nhớ mật khẩu
               </label>
               <a href='#!' className={styles.forgot}>
@@ -100,13 +122,13 @@ export default function LoginPage() {
           </form>
           <p className={styles.orText}>Hoặc đăng nhập bằng</p>
           <div className={styles.socials}>
-            <a href='#!' className={`${styles.socialBtn} ${styles.google}`}>
+            <a href='#!' className={`${styles.socialBtn} ${styles.google}`} tabIndex={-1}>
               <FaGoogle />
             </a>
-            <a href='#!' className={`${styles.socialBtn} ${styles.facebook}`}>
+            <a href='#!' className={`${styles.socialBtn} ${styles.facebook}`} tabIndex={-1}>
               <FaFacebookF />
             </a>
-            <a href='#!' className={`${styles.socialBtn} ${styles.github}`}>
+            <a href='#!' className={`${styles.socialBtn} ${styles.github}`} tabIndex={-1}>
               <FaGithub />
             </a>
           </div>

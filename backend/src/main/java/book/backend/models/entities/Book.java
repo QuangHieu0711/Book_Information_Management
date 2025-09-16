@@ -53,7 +53,10 @@ public class Book {
 
     @Nationalized
     @Column(nullable = false)
-    private Integer quantity;
+    private Integer quantity; 
+    @Nationalized
+    @Column(name = "quantity_available", nullable = false)
+    private Integer quantityAvailable;
 
     @Nationalized
     @Column(length = 10000)
@@ -67,13 +70,17 @@ public class Book {
     @JoinColumn(name = "userId")
     private User user;
 
-        @Column(length = 255)
+    @Column(length = 255)
     private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+
+        if (quantityAvailable == null) {
+            quantityAvailable = quantity;
         }
     }
 }

@@ -11,7 +11,8 @@ public interface IBorrowDetailServices {
     ApiResult<List<Book>> getAllBooks();
     ApiResult<List<BorrowDetailGetsResponse>> getsBorrowDetail(Long borrowId);
     ApiResult<Long> createBorrowDetail(BorrowDetailRequest request);
-    ApiResult<String> updateBorrowDetail(Long id, BorrowDetailRequest request);
+    ApiResult<List<Long>> createBorrowDetails(List<BorrowDetailRequest> requests);
+    ApiResult<String> updateBorrowDetail(Long id, BorrowDetailRequest request, String status);
     ApiResult<String> deleteBorrowDetail(Long id);
-
+    ApiResult<String> deleteBorrowDetails(List<Long> ids);
 }

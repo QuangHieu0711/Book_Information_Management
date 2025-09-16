@@ -8,8 +8,8 @@ import book.backend.models.global.ApiResult;
 
 public interface IBorrowServices {
     ApiResult<List<BorrowGetsResponse>> getsBorrow();
-    //ApiResult<BorrowGetsResponse> getBorrowWithDetails(Long id);
-    ApiResult<Long> createBorrow(Long userId,BorrowRequest request);
+    ApiResult<BorrowGetsResponse> getBorrowDetail(Long id); 
+    ApiResult<Long> createBorrow(Long userId, BorrowRequest request);
     ApiResult<String> updateBorrow(Long id, BorrowRequest request);
     ApiResult<String> deleteBorrow(Long id);
 }

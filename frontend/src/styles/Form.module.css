@@ -139,6 +139,15 @@
     width: 100%;
     box-sizing: border-box;
     font-size: 16px;
+    font-family: inherit;
+    /* đồng bộ font cho input và textarea */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea.input {
+    resize: vertical;
+    min-height: 36px;
+    max-height: 160px;
 }
 
 .form-footer {
@@ -187,9 +196,16 @@
     background: #bdbdbd;
 }
 
+/* Lỗi chung */
 .error-message {
     color: #e53935;
-    margin: 8px 0;
-    font-size: 15px;
+    margin-bottom: 12px;
+    font-size: 14px;
     font-weight: 500;
+}
+
+/* Border đỏ khi lỗi */
+.input-error {
+    border: 1.5px solid #e53935 !important;
+    box-shadow: 0 0 2px #e53935;
 }

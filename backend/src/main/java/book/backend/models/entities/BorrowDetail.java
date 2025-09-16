@@ -32,6 +32,6 @@ public class BorrowDetail {
     @JoinColumn(name = "bookId")
     private Book book;
 
-    @Column(nullable = false , length = 50)
+    @Column(nullable = false)
     private Integer quantity;
 }

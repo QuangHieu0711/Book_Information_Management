@@ -10,17 +10,23 @@ public class UserPrincipal implements UserDetails {
     private final Long id;
     private final String username;
     private final String password;
+    private final String fullName;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public UserPrincipal(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(Long id, String username, String password, String fullName, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.password = password;
+        this.fullName = fullName;
         this.authorities = authorities == null ? Collections.emptyList() : authorities;
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getFullName() {
+        return fullName;
     }
 
     @Override

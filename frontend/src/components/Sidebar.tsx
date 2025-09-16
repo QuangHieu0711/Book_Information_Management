@@ -9,9 +9,10 @@ import logo from '../../public/assets/logo.png'
 const menuItems = [
   { label: 'TRANG CHỦ', href: '/dashboard' },
   { label: 'TÁC GIẢ', href: '/authors' },
-  { label: 'SÁCH', href: '/books' },
   { label: 'THỂ LOẠI', href: '/categories' },
   { label: 'NHÀ XUẤT BẢN', href: '/publishers' },
+  { label: 'SÁCH', href: '/books' },
+  { label: 'MƯỢN - TRẢ SÁCH', href: '/borrow-return' },
   { label: 'TÀI KHOẢN', href: '/accounts' }
 ]
 

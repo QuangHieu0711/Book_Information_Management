@@ -1,10 +1,10 @@
 package book.backend.models.dtos.borrow;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import book.backend.models.dtos.borrowdetail.BorrowDetailGetsResponse;
-import book.backend.models.entities.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,8 +20,8 @@ public class BorrowGetsResponse {
     private LocalDate returnDate;
     private LocalDate actualReturnDate;
     private String status;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
-    private User user;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Long userId;
     private List<BorrowDetailGetsResponse> details;
 }

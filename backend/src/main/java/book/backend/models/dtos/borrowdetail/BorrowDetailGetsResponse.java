@@ -1,7 +1,5 @@
 package book.backend.models.dtos.borrowdetail;
 
-import book.backend.models.entities.Book;
-import book.backend.models.entities.Borrow;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,9 +7,7 @@ import lombok.Data;
 @Builder
 public class BorrowDetailGetsResponse {
     private Long id;
-    private Borrow borrow;
-    private Book book;
+    private Long borrowId;
+    private Long bookId;
     private Integer quantity;
-    
-
 }
