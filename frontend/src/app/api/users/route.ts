@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CONST_API } from '../constants';
 
 // Lấy danh sách người dùng
 export async function GET(req: NextRequest) {
@@ -12,17 +13,25 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch('http://localhost:8081/api/users', {
+    const res = await fetch(`${CONST_API}/users`, {
       method: 'GET',
       headers: {
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': `Bearer ${authToken}`,
       },
     });
 
     if (!res.ok) {
-      const errorData = await res.json();
+      // Nếu backend trả về lỗi, có thể không phải JSON
+      let userMessage = 'Không lấy được danh sách người dùng';
+      let errorData: any = {};
+      try {
+        errorData = await res.json();
+        userMessage = errorData.userMessage || userMessage;
+      } catch {
+        // Nếu lỗi không phải JSON, giữ userMessage mặc định
+      }
       return NextResponse.json(
-        { status: false, userMessage: errorData.userMessage || 'Không lấy được danh sách người dùng', data: [] },
+        { status: false, userMessage, data: [] },
         { status: res.status }
       );
     }
@@ -50,16 +59,31 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    // body: { username, password, role, fullName }
 
-    const res = await fetch('http://localhost:8081/api/users', {
+    const res = await fetch(`${CONST_API}/users`, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + authToken,
+        'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     });
+
+    // Xử lý lỗi backend
+    if (!res.ok) {
+      let userMessage = 'Không thêm được người dùng';
+      let errorData: any = {};
+      try {
+        errorData = await res.json();
+        userMessage = errorData.userMessage || userMessage;
+      } catch {
+        // Nếu lỗi không phải JSON, giữ userMessage mặc định
+      }
+      return NextResponse.json(
+        { status: false, userMessage },
+        { status: res.status }
+      );
+    }
 
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });

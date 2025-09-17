@@ -105,3 +105,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.status-muon {
+  background-color: #10B981;
+  color: white;
+}
+.status-da-tra {
+  background-color: #6B7280;
+  color: white;
+}

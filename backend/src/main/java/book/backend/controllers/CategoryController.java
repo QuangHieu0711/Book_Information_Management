@@ -29,31 +29,31 @@ public class CategoryController extends ApiBaseController {
         this.categoryServices = categoryServices;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @GetMapping
     public ResponseEntity<ApiResult<List<CategoryGetsResponse>>> getsCategory() {
         return executeApiResult(() -> categoryServices.getsCategory());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResult<CategoryGetsResponse>> getCategoryDetail(@PathVariable Long id) {
         return executeApiResult(() -> categoryServices.getCategoryDetail(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @PostMapping
     public ResponseEntity<ApiResult<Long>> createCategory(@Valid @RequestBody CategoryRequest apiRequest) {
         return executeApiResult(() -> categoryServices.createCategory(apiRequest));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResult<String>> updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryUpdateRequest apiRequest) {
         return executeApiResult(() -> categoryServices.updateCategory(id, apiRequest));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResult<String>> deleteCategory(@PathVariable Long id) {
         return executeApiResult(() -> categoryServices.deleteCategory(id));

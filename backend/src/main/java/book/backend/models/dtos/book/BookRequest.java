@@ -2,9 +2,9 @@ package book.backend.models.dtos.book;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,9 +29,11 @@ public class BookRequest {
     private Integer yearPublished;
 
     @NotNull(message = "Vui lòng nhập giá sách")
+    @Min(value = 0, message = "Giá sách phải >= 0")
     private BigDecimal price;
 
     @NotNull(message = "Vui lòng nhập số lượng")
+    @Min(value = 1, message = "Số lượng phải >= 1")
     private Integer quantity;
 
     @NotBlank(message = "Vui lòng nhập mô tả sách")

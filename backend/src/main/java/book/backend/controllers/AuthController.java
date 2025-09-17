@@ -59,6 +59,7 @@ public class AuthController extends ApiBaseController {
             TokenResponse tokens = tokenService.generateTokens(userDetails);
             tokens.setRole(role);
             tokens.setFullName(fullName);
+            tokens.setUserId(((UserPrincipal) userDetails).getId());
 
             ResponseCookie cookie = ResponseCookie.from("authToken", tokens.getAccessToken())
                 .httpOnly(true)

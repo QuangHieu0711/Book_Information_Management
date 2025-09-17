@@ -16,13 +16,27 @@ interface Book {
   description?: string
 }
 
-const BOOKS_PER_PAGE = 12
+const BOOKS_PER_PAGE = 15
 
 export default function BooksList() {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [search, setSearch] = useState<string>('')
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [showUserMenu, setShowUserMenu] = useState<boolean>(false)
+  const [fullName, setFullName] = useState<string>('User')
+
+  useEffect(() => {
+    let name = 'User'
+    try {
+      const userJson = localStorage.getItem('user') || sessionStorage.getItem('user')
+      if (userJson) {
+        const userObj = JSON.parse(userJson)
+        name = userObj.fullName || userObj.username || 'User'
+      }
+    } catch (e) {}
+    setFullName(name)
+  }, [])
 
   useEffect(() => {
     fetch('/api/books')
@@ -31,12 +45,10 @@ export default function BooksList() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Reset về trang 1 khi search thay đổi
   useEffect(() => {
     setCurrentPage(1)
   }, [search])
 
-  // Lọc sách theo từ khóa tìm kiếm
   const filteredBooks = books.filter(
     book =>
       book.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -44,13 +56,11 @@ export default function BooksList() {
       book.category.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Tính toán phân trang
   const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE)
   const startIndex = (currentPage - 1) * BOOKS_PER_PAGE
   const endIndex = startIndex + BOOKS_PER_PAGE
   const currentBooks = filteredBooks.slice(startIndex, endIndex)
 
-  // Tạo array số trang để hiển thị
   const getPageNumbers = () => {
     const pages = []
     const maxVisiblePages = 5
@@ -81,13 +91,72 @@ export default function BooksList() {
     return pages
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    sessionStorage.removeItem('user')
+    window.location.href = '/login'
+  }
+
+  const handleLoanHistory = () => {
+    window.location.href = '/user-dashboard/loans'
+  }
+
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   }
 
   return (
     <div className={styles.container}>
+      {/* Custom header bar */}
+      <header className={styles.customHeader}>
+        <div className={styles.logoSection}>
+          <div className={styles.logoIcon}>
+            <svg viewBox="0 0 24 24" width={28} height={28} fill="none">
+              <rect width="24" height="24" rx="6" fill="url(#paint0_linear)" />
+              <path d="M7 8.5V16C7 16.8284 7.67157 17.5 8.5 17.5H17" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M17 8.5V16C17 16.8284 16.3284 17.5 15.5 17.5H7" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M7 8.5C7 7.67157 7.67157 7 8.5 7H17" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M17 8.5C17 7.67157 16.3284 7 15.5 7H7" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+              <defs>
+                <linearGradient id="paint0_linear" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#4F46E5"/>
+                  <stop offset="1" stopColor="#A855F7"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <span className={styles.siteTitle}>QUẢN LÝ THÔNG TIN SÁCH</span>
+        </div>
+        <div className={styles.userSection}>
+          <div className={styles.userInfoOnly}>
+            <span className={styles.userName}>{fullName}</span>
+          </div>
+          <button
+            className={styles.dropdownBtn}
+            onClick={() => setShowUserMenu(v => !v)}
+            aria-label="Menu người dùng"
+          >
+            <svg width={16} height={16} viewBox="0 0 20 20" fill="none">
+              <path d="M5.25 7.75L10 12.25L14.75 7.75" stroke="#555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          {showUserMenu && (
+          <div className={styles.userMenu}>
+            <Link href="/user-dashboard/borrow-return" className={styles.menuItem}>
+              <span className={styles.menuIcon}>📄</span>
+              Phiếu mượn của tôi
+            </Link>
+            <button className={styles.menuItem} onClick={handleLogout}>
+              <span className={styles.menuIcon}>🚪</span>
+              Đăng xuất
+            </button>
+          </div>
+          )}
+        </div>
+      </header>
+
       <div className={styles.header}>
         <h1 className={styles.title}>📚 QUẢN LÝ THÔNG TIN SÁCH</h1>
         <p className={styles.subtitle}>Khám phá bộ sưu tập sách phong phú với {books.length} đầu sách</p>

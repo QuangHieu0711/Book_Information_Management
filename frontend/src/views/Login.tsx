@@ -17,8 +17,6 @@ export default function LoginPage() {
   // Nếu đã đăng nhập, tự động chuyển hướng sang dashboard
   useEffect(() => {
     if (typeof window !== 'undefined' && document.cookie.includes('authToken=')) {
-      // Gọi API lấy user info nếu muốn điều hướng theo role
-      // Hoặc đơn giản chuyển hướng mặc định
       window.location.href = '/dashboard'
     }
   }, [])
@@ -29,7 +27,11 @@ export default function LoginPage() {
     try {
       const res = await login(username, password)
       if (res?.status) {
-        // Đã đăng nhập thành công, điều hướng theo role (nếu có)
+        // Lưu thông tin user vào localStorage (chỉ phần data, chứa fullName, role, ...).
+        if (res.data) {
+          localStorage.setItem('user', JSON.stringify(res.data))
+        }
+        // Điều hướng theo role
         const role = res.data?.role
         if (role === 'ROLE_ADMIN') {
           window.location.href = '/dashboard'

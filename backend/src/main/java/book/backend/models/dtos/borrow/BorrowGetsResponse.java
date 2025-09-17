@@ -23,5 +23,6 @@ public class BorrowGetsResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userId;
+    private String fullName;
     private List<BorrowDetailGetsResponse> details;
 }

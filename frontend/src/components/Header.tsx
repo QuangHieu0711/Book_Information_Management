@@ -21,19 +21,9 @@ function getPageTitle(pathname: string) {
   return pageTitles[pathname] || '';
 }
 
-export default function Header({ user }: { user?: { username: string } } = {}) {
+export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-
-  // Fake notifications
-  const [notifications] = useState([{ read: false }, { read: false }, { read: true }]);
-  const unreadCount = useMemo(
-    () => {
-      const n = notifications.filter((x) => !x.read).length;
-      return n > 99 ? '99+' : n || '';
-    },
-    [notifications]
-  );
 
   // Dropdown
   const [userOpen, setUserOpen] = useState(false);
@@ -48,19 +38,32 @@ export default function Header({ user }: { user?: { username: string } } = {}) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Lấy thông tin user từ localStorage/sessionStorage
+  const [fullName, setFullName] = useState<string>('User');
+  useEffect(() => {
+    let name = 'User';
+    try {
+      const userJson = localStorage.getItem('user') || sessionStorage.getItem('user');
+      if (userJson) {
+        const userObj = JSON.parse(userJson);
+        name = userObj.fullName || userObj.username || 'User';
+      }
+    } catch (e) {}
+    setFullName(name);
+  }, []);
+
   const handleLogout = async () => {
     try {
       // Gọi API logout về backend để backend trả về Set-Cookie xóa token
       await fetch('http://localhost:8081/api/auth/logout', {
         method: 'POST',
-        credentials: 'include', // BẮT BUỘC để cookie đi kèm!
+        credentials: 'include',
       });
-    } catch (err) {
-      // Có thể log lỗi nếu muốn
-    }
-    // Xóa thêm ở localStorage/sessionStorage nếu có dùng (phòng trường hợp lưu token ở nhiều nơi)
+    } catch (err) {}
     localStorage.removeItem('authToken');
     sessionStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     router.push('/login');
   };
 
@@ -70,16 +73,13 @@ export default function Header({ user }: { user?: { username: string } } = {}) {
         <span className={styles.title}>{getPageTitle(pathname)}</span>
       </div>
       <div className={styles.right}>
-        {/* Notification bell */}
+        {/* Notification bell - KHÔNG hiện số thông báo */}
         <button
           className={styles.bellBtn}
           onClick={() => router.push('/notifications')}
           title="Thông báo"
         >
           <FaBell className={styles.bellIcon} />
-          {unreadCount !== '' && (
-            <span className={styles.notificationCount}>{unreadCount}</span>
-          )}
         </button>
         {/* User info + dropdown */}
         <div className={styles.userWrapper} ref={userRef}>
@@ -92,7 +92,7 @@ export default function Header({ user }: { user?: { username: string } } = {}) {
               className={styles.avatar}
             />
             <span className={styles.username}>
-              {user?.username || 'User'}
+              {fullName}
             </span>
             <FaChevronDown className={styles.chevron} />
           </div>

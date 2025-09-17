@@ -59,6 +59,7 @@ public class BookServices implements IBookServices {
                 book.getYearPublished(),
                 book.getPrice(),
                 book.getQuantity(),
+                book.getQuantityAvailable(),
                 book.getDescription(),
                 book.getLanguage(),
                 book.getUser() != null ? book.getUser().getFullName() : null,
@@ -122,11 +123,6 @@ public class BookServices implements IBookServices {
         Publisher publisher = publisherRepository.findByPublisherName(request.getPublisher())
             .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản"));
         book.setPublisher(publisher);
-
-        User user = userRepository.findByFullName(request.getUser())
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-        book.setUser(user);
-
         bookRepository.save(book);
         return ApiResult.success(null, "Cập nhật sách thành công");
     }
@@ -155,6 +151,7 @@ public class BookServices implements IBookServices {
             book.getYearPublished(),
             book.getPrice(),
             book.getQuantity(),
+            book.getQuantityAvailable(),
             book.getDescription(),
             book.getLanguage(),
             book.getUser() != null ? book.getUser().getFullName() : null,

@@ -22,6 +22,7 @@ public class BookGetsResponse {
     private Integer yearPublished;
     private BigDecimal price;
     private Integer quantity;
+    private Integer quantityAvailable;
     private String description;
     private String language;
     private String user;

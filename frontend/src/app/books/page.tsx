@@ -12,7 +12,7 @@ function DeleteBookModal({
   bookTitle,
   onClose,
   onConfirm,
-  loading,
+  loading
 }: {
   bookTitle: string
   onClose: () => void
@@ -24,7 +24,7 @@ function DeleteBookModal({
       <div className={deleteModalStyles['modal-content']} style={{ maxWidth: 380, minWidth: 300 }}>
         <div className={deleteModalStyles['modal-title-bar']}>
           <div className={deleteModalStyles['modal-title']}>XÁC NHẬN XÓA</div>
-          <button type="button" className={deleteModalStyles['close-btn']} onClick={onClose}>
+          <button type='button' className={deleteModalStyles['close-btn']} onClick={onClose}>
             ×
           </button>
         </div>
@@ -32,15 +32,10 @@ function DeleteBookModal({
           Bạn có chắc chắn muốn xóa sách <b>{bookTitle}</b>?
         </div>
         <div className={deleteModalStyles['form-footer']}>
-          <button type="button" onClick={onClose} className={deleteModalStyles['btn-cancel']}>
+          <button type='button' onClick={onClose} className={deleteModalStyles['btn-cancel']}>
             Hủy bỏ
           </button>
-          <button
-            type="button"
-            className={deleteModalStyles['btn-confirm']}
-            disabled={loading}
-            onClick={onConfirm}
-          >
+          <button type='button' className={deleteModalStyles['btn-confirm']} disabled={loading} onClick={onConfirm}>
             {loading ? 'Đang xóa...' : 'Xác nhận'}
           </button>
         </div>
@@ -62,13 +57,13 @@ type Book = {
   yearPublished: number
   price: number
   quantity: number
+  quantityAvailable: number
   description: string
   language: string
   createdAt: string
 }
 
-
-const PAGE_SIZE = 10
+const PAGE_SIZE = 14
 
 function BookListContent() {
   const [books, setBooks] = useState<Book[]>([])
@@ -87,7 +82,7 @@ function BookListContent() {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Thông báo thành công
-  const [toast, setToast] = useState<{ message: string, type?: 'success' | 'error' } | null>(null)
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null)
 
   // Lấy danh sách sách
   const fetchBooks = async () => {
@@ -113,17 +108,16 @@ function BookListContent() {
   }, [])
 
   // Sắp xếp theo thời gian tạo (createdAt) mới nhất lên đầu
-  const sortedBooks = [...books].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  const sortedBooks = [...books].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   // Filter books by title, author, category, publisher, language
-  const filtered = sortedBooks.filter(book =>
-    book.title.toLowerCase().includes(search.toLowerCase()) ||
-    book.author.toLowerCase().includes(search.toLowerCase()) ||
-    book.category.toLowerCase().includes(search.toLowerCase()) ||
-    book.publisher.toLowerCase().includes(search.toLowerCase()) ||
-    book.language.toLowerCase().includes(search.toLowerCase())
+  const filtered = sortedBooks.filter(
+    book =>
+      book.title.toLowerCase().includes(search.toLowerCase()) ||
+      book.author.toLowerCase().includes(search.toLowerCase()) ||
+      book.category.toLowerCase().includes(search.toLowerCase()) ||
+      book.publisher.toLowerCase().includes(search.toLowerCase()) ||
+      book.language.toLowerCase().includes(search.toLowerCase())
   )
 
   // Paging
@@ -134,21 +128,20 @@ function BookListContent() {
     setViewBook(book)
   }
 
-    const handleEdit = (book: Book) => {
+  const handleEdit = (book: Book) => {
     setEditBook({
-        id: book.id,
-        title: book.title,
-        authorId: String(book.authorId),      
-        categoryId: String(book.categoryId),
-        publisherId: String(book.publisherId),
-        yearPublished: book.yearPublished,
-        price: book.price,
-        quantity: book.quantity,
-        description: book.description,
-        language: book.language,
+      id: book.id,
+      title: book.title,
+      authorId: String(book.authorId),
+      categoryId: String(book.categoryId),
+      publisherId: String(book.publisherId),
+      yearPublished: book.yearPublished,
+      price: String(book.price),
+      quantity: String(book.quantity),
+      description: book.description,
+      language: book.language
     })
-    }
-
+  }
 
   const handleDeleteClick = (book: Book) => {
     setDeleteBook(book)
@@ -196,9 +189,9 @@ function BookListContent() {
           + Thêm sách
         </button>
         <input
-          type="text"
+          type='text'
           className={listStyles['list-search']}
-          placeholder="Tìm kiếm tên sách, tác giả, thể loại..."
+          placeholder='Tìm kiếm tên sách, tác giả, thể loại...'
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -213,7 +206,7 @@ function BookListContent() {
             <th>NXB</th>
             <th>Năm XB</th>
             <th>Giá</th>
-            <th>Số lượng</th>
+            <th>SL còn</th>
             <th>Ngôn ngữ</th>
             <th>Ngày tạo</th>
             <th>Hành động</th>
@@ -236,30 +229,18 @@ function BookListContent() {
                 <td>{b.publisher}</td>
                 <td>{b.yearPublished}</td>
                 <td>{b.price.toLocaleString()}₫</td>
-                <td>{b.quantity}</td>
+                <td>{b.quantityAvailable}</td>
                 <td>{b.language}</td>
                 <td>{b.createdAt ? b.createdAt.substring(0, 10) : ''}</td>
                 <td>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xem"
-                    onClick={() => handleView(b)}
-                  >
-                    <FaEye color="#2563eb" />
+                  <button className={listStyles['list-action-btn']} title='Xem' onClick={() => handleView(b)}>
+                    <FaEye color='#2563eb' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Sửa"
-                    onClick={() => handleEdit(b)}
-                  >
-                    <FaEdit color="#f59e42" />
+                  <button className={listStyles['list-action-btn']} title='Sửa' onClick={() => handleEdit(b)}>
+                    <FaEdit color='#f59e42' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xóa"
-                    onClick={() => handleDeleteClick(b)}
-                  >
-                    <FaTrash color="#ef4444" />
+                  <button className={listStyles['list-action-btn']} title='Xóa' onClick={() => handleDeleteClick(b)}>
+                    <FaTrash color='#ef4444' />
                   </button>
                 </td>
               </tr>
@@ -269,11 +250,7 @@ function BookListContent() {
       </table>
       {/* Phân trang */}
       <div className={listStyles['list-pagination']}>
-        <button
-          className={listStyles['list-pagination-btn']}
-          onClick={handlePrevPage}
-          disabled={page === 1}
-        >
+        <button className={listStyles['list-pagination-btn']} onClick={handlePrevPage} disabled={page === 1}>
           Trang trước
         </button>
         <span className={listStyles['list-pagination-info']}>
@@ -290,14 +267,14 @@ function BookListContent() {
       {/* Modal form */}
       {showAdd && (
         <BookForm
-          mode="add"
+          mode='add'
           onClose={() => setShowAdd(false)}
           onSuccess={() => handleSuccess('Thêm sách thành công')}
         />
       )}
       {editBook && (
         <BookForm
-          mode="edit"
+          mode='edit'
           book={editBook}
           onClose={() => setEditBook(null)}
           onSuccess={() => handleSuccess('Cập nhật sách thành công')}
@@ -311,19 +288,8 @@ function BookListContent() {
           onConfirm={handleDeleteConfirm}
         />
       )}
-      {viewBook && (
-        <BookDetailModal
-          book={viewBook}
-          onClose={() => setViewBook(null)}
-        />
-      )}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {viewBook && <BookDetailModal book={viewBook} onClose={() => setViewBook(null)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

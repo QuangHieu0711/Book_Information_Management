@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class GetResponse {
+    private Long userId;
     private String fullName;
     private String apartmentNumber;
     private String relationship;

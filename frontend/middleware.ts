@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Bỏ qua các route không cần redirect
+  // Bỏ qua các route public, static, api, login
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/api') ||
@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Kiểm tra đăng nhập (giả sử bạn dùng cookie 'authToken')
+  // Kiểm tra cookie đăng nhập với tên 'authToken'
   const isUserLoggedIn = request.cookies.get('authToken');
   if (!isUserLoggedIn) {
     return NextResponse.redirect(new URL('/login', request.url));

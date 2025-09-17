@@ -12,7 +12,7 @@ function DeleteCategoryModal({
   categoryname,
   onClose,
   onConfirm,
-  loading,
+  loading
 }: {
   categoryname: string
   onClose: () => void
@@ -24,7 +24,7 @@ function DeleteCategoryModal({
       <div className={deleteModalStyles['modal-content']} style={{ maxWidth: 380, minWidth: 300 }}>
         <div className={deleteModalStyles['modal-title-bar']}>
           <div className={deleteModalStyles['modal-title']}>XÁC NHẬN XÓA</div>
-          <button type="button" className={deleteModalStyles['close-btn']} onClick={onClose}>
+          <button type='button' className={deleteModalStyles['close-btn']} onClick={onClose}>
             ×
           </button>
         </div>
@@ -32,15 +32,10 @@ function DeleteCategoryModal({
           Bạn có chắc chắn muốn xóa thể loại <b>{categoryname}</b>?
         </div>
         <div className={deleteModalStyles['form-footer']}>
-          <button type="button" onClick={onClose} className={deleteModalStyles['btn-cancel']}>
+          <button type='button' onClick={onClose} className={deleteModalStyles['btn-cancel']}>
             Hủy bỏ
           </button>
-          <button
-            type="button"
-            className={deleteModalStyles['btn-confirm']}
-            disabled={loading}
-            onClick={onConfirm}
-          >
+          <button type='button' className={deleteModalStyles['btn-confirm']} disabled={loading} onClick={onConfirm}>
             {loading ? 'Đang xóa...' : 'Xác nhận'}
           </button>
         </div>
@@ -55,7 +50,7 @@ type Category = {
   createdAt: string
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 14
 
 function CategoryListContent() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -74,7 +69,7 @@ function CategoryListContent() {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Thông báo thành công
-  const [toast, setToast] = useState<{message: string, type?: 'success'|'error'}|null>(null)
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null)
 
   // Lấy danh sách category
   const fetchCategories = async () => {
@@ -105,17 +100,14 @@ function CategoryListContent() {
   )
 
   // Filter categories by categoryname
-  const filtered = sortedCategories.filter(c =>
-    c.categoryname.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = sortedCategories.filter(c => c.categoryname.toLowerCase().includes(search.toLowerCase()))
 
   // Paging
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const pagedCategories = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const handleView = (category: Category) => setViewCategory(category)
-  const handleEdit = (category: Category) =>
-    setEditCategory({ id: category.id, categoryname: category.categoryname })
+  const handleEdit = (category: Category) => setEditCategory({ id: category.id, categoryname: category.categoryname })
   const handleDeleteClick = (category: Category) => setDeleteCategory(category)
 
   const handleDeleteConfirm = async () => {
@@ -161,9 +153,9 @@ function CategoryListContent() {
           + Thêm thể loại
         </button>
         <input
-          type="text"
+          type='text'
           className={listStyles['list-search']}
-          placeholder="Tìm kiếm tên thể loại..."
+          placeholder='Tìm kiếm tên thể loại...'
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -191,26 +183,14 @@ function CategoryListContent() {
                 <td>{c.categoryname}</td>
                 <td>{c.createdAt ? c.createdAt.substring(0, 10) : ''}</td>
                 <td>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xem"
-                    onClick={() => handleView(c)}
-                  >
-                    <FaEye color="#2563eb" />
+                  <button className={listStyles['list-action-btn']} title='Xem' onClick={() => handleView(c)}>
+                    <FaEye color='#2563eb' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Sửa"
-                    onClick={() => handleEdit(c)}
-                  >
-                    <FaEdit color="#f59e42" />
+                  <button className={listStyles['list-action-btn']} title='Sửa' onClick={() => handleEdit(c)}>
+                    <FaEdit color='#f59e42' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xóa"
-                    onClick={() => handleDeleteClick(c)}
-                  >
-                    <FaTrash color="#ef4444" />
+                  <button className={listStyles['list-action-btn']} title='Xóa' onClick={() => handleDeleteClick(c)}>
+                    <FaTrash color='#ef4444' />
                   </button>
                 </td>
               </tr>
@@ -220,11 +200,7 @@ function CategoryListContent() {
       </table>
       {/* Phân trang */}
       <div className={listStyles['list-pagination']}>
-        <button
-          className={listStyles['list-pagination-btn']}
-          onClick={handlePrevPage}
-          disabled={page === 1}
-        >
+        <button className={listStyles['list-pagination-btn']} onClick={handlePrevPage} disabled={page === 1}>
           Trang trước
         </button>
         <span className={listStyles['list-pagination-info']}>
@@ -241,7 +217,7 @@ function CategoryListContent() {
       {/* Modal form thêm */}
       {showAdd && (
         <CategoryForm
-          mode="add"
+          mode='add'
           onClose={() => setShowAdd(false)}
           onSuccess={() => handleSuccess('Thêm thể loại thành công')}
         />
@@ -249,7 +225,7 @@ function CategoryListContent() {
       {/* Modal form sửa */}
       {editCategory && (
         <CategoryForm
-          mode="edit"
+          mode='edit'
           category={editCategory}
           onClose={() => setEditCategory(null)}
           onSuccess={() => handleSuccess('Cập nhật thể loại thành công')}
@@ -265,19 +241,8 @@ function CategoryListContent() {
         />
       )}
       {/* Modal xem chi tiết */}
-      {viewCategory && (
-        <CategoryDetailModal
-          category={viewCategory}
-          onClose={() => setViewCategory(null)}
-        />
-      )}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {viewCategory && <CategoryDetailModal category={viewCategory} onClose={() => setViewCategory(null)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

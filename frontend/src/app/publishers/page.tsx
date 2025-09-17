@@ -12,7 +12,7 @@ function DeletePublisherModal({
   publisherName,
   onClose,
   onConfirm,
-  loading,
+  loading
 }: {
   publisherName: string
   onClose: () => void
@@ -24,7 +24,7 @@ function DeletePublisherModal({
       <div className={deleteModalStyles['modal-content']} style={{ maxWidth: 380, minWidth: 300 }}>
         <div className={deleteModalStyles['modal-title-bar']}>
           <div className={deleteModalStyles['modal-title']}>XÁC NHẬN XÓA</div>
-          <button type="button" className={deleteModalStyles['close-btn']} onClick={onClose}>
+          <button type='button' className={deleteModalStyles['close-btn']} onClick={onClose}>
             ×
           </button>
         </div>
@@ -32,15 +32,10 @@ function DeletePublisherModal({
           Bạn có chắc chắn muốn xóa nhà xuất bản <b>{publisherName}</b>?
         </div>
         <div className={deleteModalStyles['form-footer']}>
-          <button type="button" onClick={onClose} className={deleteModalStyles['btn-cancel']}>
+          <button type='button' onClick={onClose} className={deleteModalStyles['btn-cancel']}>
             Hủy bỏ
           </button>
-          <button
-            type="button"
-            className={deleteModalStyles['btn-confirm']}
-            disabled={loading}
-            onClick={onConfirm}
-          >
+          <button type='button' className={deleteModalStyles['btn-confirm']} disabled={loading} onClick={onConfirm}>
             {loading ? 'Đang xóa...' : 'Xác nhận'}
           </button>
         </div>
@@ -60,7 +55,7 @@ type Publisher = {
   createdAt: string
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 8
 
 function PublisherListContent() {
   const [publishers, setPublishers] = useState<Publisher[]>([])
@@ -79,7 +74,7 @@ function PublisherListContent() {
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Thông báo thành công
-  const [toast, setToast] = useState<{message: string, type?: 'success'|'error'}|null>(null)
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null)
 
   // Lấy danh sách publisher
   const fetchPublishers = async () => {
@@ -110,12 +105,13 @@ function PublisherListContent() {
   )
 
   // Filter publishers by name, address, phone, email, website
-  const filtered = sortedPublishers.filter(p =>
-    p.publisherName.toLowerCase().includes(search.toLowerCase()) ||
-    p.address.toLowerCase().includes(search.toLowerCase()) ||
-    p.email.toLowerCase().includes(search.toLowerCase()) ||
-    p.phone.toLowerCase().includes(search.toLowerCase()) ||
-    p.website.toLowerCase().includes(search.toLowerCase())
+  const filtered = sortedPublishers.filter(
+    p =>
+      p.publisherName.toLowerCase().includes(search.toLowerCase()) ||
+      p.address.toLowerCase().includes(search.toLowerCase()) ||
+      p.email.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone.toLowerCase().includes(search.toLowerCase()) ||
+      p.website.toLowerCase().includes(search.toLowerCase())
   )
 
   // Paging
@@ -134,7 +130,7 @@ function PublisherListContent() {
       phone: publisher.phone,
       email: publisher.email,
       website: publisher.website,
-      isActive: publisher.isActive,
+      isActive: publisher.isActive
     })
   }
 
@@ -185,9 +181,9 @@ function PublisherListContent() {
           + Thêm nhà xuất bản
         </button>
         <input
-          type="text"
+          type='text'
           className={listStyles['list-search']}
-          placeholder="Tìm kiếm tên, địa chỉ, email, website..."
+          placeholder='Tìm kiếm tên, địa chỉ, email, website...'
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -229,26 +225,14 @@ function PublisherListContent() {
                 </td>
                 <td>{p.createdAt ? p.createdAt.substring(0, 10) : ''}</td>
                 <td>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xem"
-                    onClick={() => handleView(p)}
-                  >
-                    <FaEye color="#2563eb" />
+                  <button className={listStyles['list-action-btn']} title='Xem' onClick={() => handleView(p)}>
+                    <FaEye color='#2563eb' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Sửa"
-                    onClick={() => handleEdit(p)}
-                  >
-                    <FaEdit color="#f59e42" />
+                  <button className={listStyles['list-action-btn']} title='Sửa' onClick={() => handleEdit(p)}>
+                    <FaEdit color='#f59e42' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xóa"
-                    onClick={() => handleDeleteClick(p)}
-                  >
-                    <FaTrash color="#ef4444" />
+                  <button className={listStyles['list-action-btn']} title='Xóa' onClick={() => handleDeleteClick(p)}>
+                    <FaTrash color='#ef4444' />
                   </button>
                 </td>
               </tr>
@@ -258,11 +242,7 @@ function PublisherListContent() {
       </table>
       {/* Phân trang */}
       <div className={listStyles['list-pagination']}>
-        <button
-          className={listStyles['list-pagination-btn']}
-          onClick={handlePrevPage}
-          disabled={page === 1}
-        >
+        <button className={listStyles['list-pagination-btn']} onClick={handlePrevPage} disabled={page === 1}>
           Trang trước
         </button>
         <span className={listStyles['list-pagination-info']}>
@@ -279,14 +259,14 @@ function PublisherListContent() {
       {/* Modal form */}
       {showAdd && (
         <PublisherForm
-          mode="add"
+          mode='add'
           onClose={() => setShowAdd(false)}
           onSuccess={() => handleSuccess('Thêm nhà xuất bản thành công')}
         />
       )}
       {editPublisher && (
         <PublisherForm
-          mode="edit"
+          mode='edit'
           publisher={editPublisher}
           onClose={() => setEditPublisher(null)}
           onSuccess={() => handleSuccess('Cập nhật nhà xuất bản thành công')}
@@ -300,19 +280,8 @@ function PublisherListContent() {
           onConfirm={handleDeleteConfirm}
         />
       )}
-      {viewPublisher && (
-        <PublisherDetailModal
-          publisher={viewPublisher}
-          onClose={() => setViewPublisher(null)}
-        />
-      )}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {viewPublisher && <PublisherDetailModal publisher={viewPublisher} onClose={() => setViewPublisher(null)} />}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

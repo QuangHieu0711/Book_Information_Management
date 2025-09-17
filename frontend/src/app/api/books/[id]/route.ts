@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Lấy chi tiết sách
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const authToken = req.cookies.get('authToken')?.value;
-  const { id } = params;
-
-  if (!authToken) {
-    return NextResponse.json(
-      { status: false, userMessage: 'Bạn chưa đăng nhập hoặc thiếu token!', data: null },
-      { status: 401 }
-    );
-  }
-
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
+    const authToken = request.cookies.get('authToken')?.value;
+    if (!authToken) {
+      return NextResponse.json(
+        { status: false, userMessage: 'Bạn chưa đăng nhập hoặc thiếu token!', data: null },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await Promise.resolve(context.params);
     const res = await fetch(`http://localhost:8081/api/books/${id}`, {
       method: 'GET',
       headers: {
@@ -30,22 +32,29 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // Sửa thông tin sách
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const authToken = req.cookies.get('authToken')?.value;
-  const { id } = params;
-
-  if (!authToken) {
-    return NextResponse.json({ status: false, userMessage: 'Bạn chưa đăng nhập hoặc thiếu token!' }, { status: 401 });
-  }
-
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
-    const body = await req.json();
-    // body: { title, authorName, category, publisher, yearPublished, price, quantity, description, language, user, createdAt }
+    const authToken = request.cookies.get('authToken')?.value;
+    if (!authToken) {
+      return NextResponse.json(
+        { status: false, userMessage: 'Bạn chưa đăng nhập hoặc thiếu token!' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await Promise.resolve(context.params);
+    const body = await request.json();
+    
+    // Log request để debug
+    console.log(`Updating book ${id} with data:`, body);
 
     const res = await fetch(`http://localhost:8081/api/books/${id}`, {
       method: 'PUT',
       headers: {
-        Authorization: 'Bearer ' + authToken,
+        'Authorization': `Bearer ${authToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
@@ -59,15 +68,20 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // Xóa sách
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const authToken = req.cookies.get('authToken')?.value;
-  const { id } = params;
-
-  if (!authToken) {
-    return NextResponse.json({ status: false, userMessage: 'Bạn chưa đăng nhập hoặc thiếu token!' }, { status: 401 });
-  }
-
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
+    const authToken = request.cookies.get('authToken')?.value;
+    if (!authToken) {
+      return NextResponse.json(
+        { status: false, userMessage: 'Bạn chưa đăng nhập hoặc thiếu token!' },
+        { status: 401 }
+      );
+    }
+
+    const { id } = await Promise.resolve(context.params);
     const res = await fetch(`http://localhost:8081/api/books/${id}`, {
       method: 'DELETE',
       headers: {

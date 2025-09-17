@@ -12,7 +12,7 @@ function DeleteBorrowModal({
   borrowInfo,
   onClose,
   onConfirm,
-  loading,
+  loading
 }: {
   borrowInfo: string
   onClose: () => void
@@ -24,7 +24,7 @@ function DeleteBorrowModal({
       <div className={deleteModalStyles['modal-content']} style={{ maxWidth: 380, minWidth: 300 }}>
         <div className={deleteModalStyles['modal-title-bar']}>
           <div className={deleteModalStyles['modal-title']}>XÁC NHẬN XÓA</div>
-          <button type="button" className={deleteModalStyles['close-btn']} onClick={onClose}>
+          <button type='button' className={deleteModalStyles['close-btn']} onClick={onClose}>
             ×
           </button>
         </div>
@@ -32,15 +32,10 @@ function DeleteBorrowModal({
           Bạn có chắc chắn muốn xóa phiếu mượn <b>{borrowInfo}</b>?
         </div>
         <div className={deleteModalStyles['form-footer']}>
-          <button type="button" onClick={onClose} className={deleteModalStyles['btn-cancel']}>
+          <button type='button' onClick={onClose} className={deleteModalStyles['btn-cancel']}>
             Hủy bỏ
           </button>
-          <button
-            type="button"
-            className={deleteModalStyles['btn-confirm']}
-            disabled={loading}
-            onClick={onConfirm}
-          >
+          <button type='button' className={deleteModalStyles['btn-confirm']} disabled={loading} onClick={onConfirm}>
             {loading ? 'Đang xóa...' : 'Xác nhận'}
           </button>
         </div>
@@ -52,38 +47,49 @@ function DeleteBorrowModal({
 // Kiểu dữ liệu trả về từ API /api/borrows (đã resolve thông tin user và chi tiết)
 type Borrow = {
   id: number
-  userName: string
+  fullName: string
   userId: number
   borrowDate: string
   returnDate: string
   actualReturnDate: string
   status: string // "MUON", "DA TRA"
   createdAt: string
-  totalBooks: number // Tổng số sách trong phiếu
-  totalQuantity: number // Tổng số lượng mượn
-  bookTitles: string[] // Danh sách tên sách ngắn gọn
+  details: {
+    id: number
+    borrowId: number
+    bookId: number
+    quantity: number
+  }[]
 }
 
-const PAGE_SIZE = 10
+type BorrowWithComputedFields = Borrow & {
+  totalBooks: number
+  totalQuantity: number
+  bookTitles: string[]
+}
+
+const PAGE_SIZE = 14
 
 function BorrowListContent() {
-  const [borrows, setBorrows] = useState<Borrow[]>([])
+  const [borrows, setBorrows] = useState<BorrowWithComputedFields[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [statusFilter, setStatusFilter] = useState('Tất cả') // Thêm trạng thái lọc
+  const [returnDateFilter, setReturnDateFilter] = useState('') // Thêm ngày hẹn trả lọc
 
   // State cho modal form
   const [showAdd, setShowAdd] = useState(false)
   const [editBorrow, setEditBorrow] = useState<BorrowFormData | null>(null)
-  const [viewBorrow, setViewBorrow] = useState<Borrow | null>(null)
+  const [viewBorrow, setViewBorrow] = useState<BorrowWithComputedFields | null>(null)
 
   // State cho modal xóa
-  const [deleteBorrow, setDeleteBorrow] = useState<Borrow | null>(null)
+  const [deleteBorrow, setDeleteBorrow] = useState<BorrowWithComputedFields | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Thông báo thành công
-  const [toast, setToast] = useState<{ message: string, type?: 'success' | 'error' } | null>(null)
+  const [toast, setToast] = useState<{ message: string; type?: 'success' | 'error' } | null>(null)
 
   // Lấy danh sách phiếu mượn
   const fetchBorrows = async () => {
@@ -93,7 +99,18 @@ function BorrowListContent() {
       const res = await fetch('/api/borrow-return/borrows', { credentials: 'include' })
       const json = await res.json()
       if (json.status && Array.isArray(json.data)) {
-        setBorrows(json.data)
+        const processedBorrows = json.data.map((borrow: Borrow) => {
+          const totalBooks = borrow.details.length
+          const totalQuantity = borrow.details.reduce((sum, detail) => sum + detail.quantity, 0)
+          const bookTitles = borrow.details.map(detail => `Sách ID ${detail.bookId}`)
+          return {
+            ...borrow,
+            totalBooks,
+            totalQuantity,
+            bookTitles
+          }
+        })
+        setBorrows(processedBorrows)
       } else {
         setError(json.userMessage || 'Lỗi lấy danh sách phiếu mượn')
       }
@@ -109,38 +126,44 @@ function BorrowListContent() {
   }, [])
 
   // Sắp xếp theo thời gian tạo (createdAt) mới nhất lên đầu
-  const sortedBorrows = [...borrows].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  const sortedBorrows = [...borrows].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-  // Filter borrows by user name, status, book titles
-  const filtered = sortedBorrows.filter(borrow =>
-    borrow.userName.toLowerCase().includes(search.toLowerCase()) ||
-    borrow.status.toLowerCase().includes(search.toLowerCase()) ||
-    borrow.bookTitles.some(title => 
-      title.toLowerCase().includes(search.toLowerCase())
+  // Lọc theo trạng thái, ngày hẹn trả, và tìm kiếm
+  const filtered = sortedBorrows.filter(borrow => {
+    const fullName = borrow.fullName?.toLowerCase() ?? ''
+    const status = borrow.status?.toLowerCase() ?? ''
+    const searchLower = search.toLowerCase()
+    const returnDateMatch = returnDateFilter ? borrow.returnDate === returnDateFilter : true
+    const statusMatch =
+      statusFilter === 'Tất cả' ? true : status === statusFilter.toLowerCase().replace('đã trả', 'da tra')
+    return (
+      returnDateMatch &&
+      statusMatch &&
+      (fullName.includes(searchLower) ||
+        status.includes(searchLower) ||
+        (borrow.bookTitles?.some(title => (title?.toLowerCase() ?? '').includes(searchLower)) ?? false))
     )
-  )
+  })
 
   // Paging
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const pagedBorrows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const handleView = (borrow: Borrow) => {
+  const handleView = (borrow: BorrowWithComputedFields) => {
     setViewBorrow(borrow)
   }
 
-  const handleEdit = (borrow: Borrow) => {
+  const handleEdit = (borrow: BorrowWithComputedFields) => {
     setEditBorrow({
       id: borrow.id,
       userId: String(borrow.userId),
       borrowDate: borrow.borrowDate,
       returnDate: borrow.returnDate,
-      status: borrow.status,
+      status: borrow.status || ''
     })
   }
 
-  const handleDeleteClick = (borrow: Borrow) => {
+  const handleDeleteClick = (borrow: BorrowWithComputedFields) => {
     setDeleteBorrow(borrow)
   }
 
@@ -148,9 +171,9 @@ function BorrowListContent() {
     if (!deleteBorrow) return
     setDeleteLoading(true)
     try {
-      const res = await fetch(`/api/borrows/${deleteBorrow.id}`, { 
-        method: 'DELETE', 
-        credentials: 'include' 
+      const res = await fetch(`/api/borrow-return/borrows/${deleteBorrow.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
       })
       const json = await res.json()
       if (json.status) {
@@ -172,20 +195,25 @@ function BorrowListContent() {
 
   useEffect(() => {
     setPage(1)
-  }, [search])
+  }, [search, statusFilter, returnDateFilter])
 
   const handleSuccess = (msg: string) => {
     fetchBorrows()
     setToast({ message: msg, type: 'success' })
   }
 
-  // Format status
+  // Format status badge with custom colors
   const getStatusBadge = (status: string) => {
-    const badgeClass = status === 'MUON' 
-      ? listStyles['status-muon'] 
-      : listStyles['status-da-tra']
+    const badgeClass =
+      status === 'MUON'
+        ? `${listStyles['status-badge']} ${listStyles['status-muon']}`
+        : `${listStyles['status-badge']} ${listStyles['status-da-tra']}`
     const badgeText = status === 'MUON' ? 'MƯỢN' : 'ĐÃ TRẢ'
-    return <span className={badgeClass}>{badgeText}</span>
+    return (
+      <span className={badgeClass} style={{ padding: '4px 8px', borderRadius: '12px' }}>
+        {badgeText}
+      </span>
+    )
   }
 
   // Format date
@@ -198,18 +226,72 @@ function BorrowListContent() {
 
   return (
     <div className={listStyles['list-container']}>
-      <div className={listStyles['list-toolbar']}>
+      <div
+        className={listStyles['list-toolbar']}
+        style={{
+          display: 'flex',
+          gap: '32px',
+          alignItems: 'center',
+          marginBottom: '20px',
+          flexWrap: 'wrap'
+        }}
+      >
         <button className={listStyles['list-add-btn']} onClick={() => setShowAdd(true)}>
           + Thêm phiếu mượn
         </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label htmlFor='statusFilter' style={{ minWidth: 85, textAlign: 'right' }}>
+            Trạng thái:
+          </label>
+          <select
+            id='statusFilter'
+            className={listStyles['list-filter']}
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            style={{
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              fontSize: '14px',
+              minWidth: 110
+            }}
+          >
+            <option value='Tất cả'>Tất cả</option>
+            <option value='MƯỢN'>Mượn</option>
+            <option value='ĐÃ TRẢ'>Đã trả</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label htmlFor='returnDateFilter' style={{ minWidth: 100, textAlign: 'right' }}>
+            Ngày hẹn trả:
+          </label>
+          <input
+            type='date'
+            id='returnDateFilter'
+            className={listStyles['list-date-filter']}
+            value={returnDateFilter}
+            onChange={e => setReturnDateFilter(e.target.value)}
+            style={{
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              fontSize: '14px',
+              minWidth: 140
+            }}
+          />
+        </div>
+
         <input
-          type="text"
+          type='text'
           className={listStyles['list-search']}
-          placeholder="Tìm kiếm theo tên người mượn, trạng thái, sách..."
+          placeholder='Tìm kiếm theo tên người mượn, trạng thái, sách...'
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
       </div>
+
       <table className={listStyles['list-table']}>
         <thead>
           <tr>
@@ -222,7 +304,6 @@ function BorrowListContent() {
             <th>Trạng thái</th>
             <th>Số sách</th>
             <th>Tổng số lượng</th>
-            <th>Sách mượn</th>
             <th>Ngày tạo</th>
             <th>Hành động</th>
           </tr>
@@ -230,7 +311,7 @@ function BorrowListContent() {
         <tbody>
           {pagedBorrows.length === 0 ? (
             <tr>
-              <td colSpan={12} style={{ textAlign: 'center', padding: 24 }}>
+              <td colSpan={11} style={{ textAlign: 'center', padding: '24px' }}>
                 Không có phiếu mượn nào.
               </td>
             </tr>
@@ -239,44 +320,23 @@ function BorrowListContent() {
               <tr key={b.id}>
                 <td>{(page - 1) * PAGE_SIZE + idx + 1}</td>
                 <td>PM-{b.id.toString().padStart(4, '0')}</td>
-                <td>{b.userName}</td>
+                <td>{b.fullName}</td>
                 <td>{formatDate(b.borrowDate)}</td>
                 <td>{formatDate(b.returnDate)}</td>
                 <td>{formatDate(b.actualReturnDate)}</td>
                 <td>{getStatusBadge(b.status)}</td>
                 <td>{b.totalBooks}</td>
                 <td>{b.totalQuantity}</td>
-                <td>
-                  <div style={{ maxWidth: 200, overflow: 'hidden' }}>
-                    {b.bookTitles.map((title, i) => (
-                      <div key={i} style={{ fontSize: 14, color: '#64748b' }}>
-                        • {title}
-                      </div>
-                    ))}
-                  </div>
-                </td>
                 <td>{b.createdAt ? b.createdAt.substring(0, 10) : ''}</td>
                 <td>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xem"
-                    onClick={() => handleView(b)}
-                  >
-                    <FaEye color="#2563eb" />
+                  <button className={listStyles['list-action-btn']} title='Xem' onClick={() => handleView(b)}>
+                    <FaEye color='#2563eb' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Sửa"
-                    onClick={() => handleEdit(b)}
-                  >
-                    <FaEdit color="#f59e42" />
+                  <button className={listStyles['list-action-btn']} title='Sửa' onClick={() => handleEdit(b)}>
+                    <FaEdit color='#f59e42' />
                   </button>
-                  <button
-                    className={listStyles['list-action-btn']}
-                    title="Xóa"
-                    onClick={() => handleDeleteClick(b)}
-                  >
-                    <FaTrash color="#ef4444" />
+                  <button className={listStyles['list-action-btn']} title='Xóa' onClick={() => handleDeleteClick(b)}>
+                    <FaTrash color='#ef4444' />
                   </button>
                 </td>
               </tr>
@@ -286,11 +346,7 @@ function BorrowListContent() {
       </table>
       {/* Phân trang */}
       <div className={listStyles['list-pagination']}>
-        <button
-          className={listStyles['list-pagination-btn']}
-          onClick={handlePrevPage}
-          disabled={page === 1}
-        >
+        <button className={listStyles['list-pagination-btn']} onClick={handlePrevPage} disabled={page === 1}>
           Trang trước
         </button>
         <span className={listStyles['list-pagination-info']}>
@@ -307,14 +363,14 @@ function BorrowListContent() {
       {/* Modal form */}
       {showAdd && (
         <BorrowForm
-          mode="add"
+          mode='add'
           onClose={() => setShowAdd(false)}
           onSuccess={() => handleSuccess('Thêm phiếu mượn thành công')}
         />
       )}
       {editBorrow && (
         <BorrowForm
-          mode="edit"
+          mode='edit'
           borrow={editBorrow}
           onClose={() => setEditBorrow(null)}
           onSuccess={() => handleSuccess('Cập nhật phiếu mượn thành công')}
@@ -322,7 +378,7 @@ function BorrowListContent() {
       )}
       {deleteBorrow && (
         <DeleteBorrowModal
-          borrowInfo={`PM-${deleteBorrow.id} - ${deleteBorrow.userName}`}
+          borrowInfo={`PM-${deleteBorrow.id} - ${deleteBorrow.fullName}`}
           loading={deleteLoading}
           onClose={() => setDeleteBorrow(null)}
           onConfirm={handleDeleteConfirm}
@@ -330,17 +386,15 @@ function BorrowListContent() {
       )}
       {viewBorrow && (
         <BorrowDetailModal
-          borrow={viewBorrow}
+          borrow={{
+            ...viewBorrow,
+            userName: viewBorrow.fullName,
+            borrowDetails: viewBorrow.details // Add this line to fix the missing property
+          }}
           onClose={() => setViewBorrow(null)}
         />
       )}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

@@ -28,7 +28,8 @@ public class BookController extends ApiBaseController {
     public BookController(IBookServices bookServices) {
         this.bookServices = bookServices;
     }
-     
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('user')")
     @GetMapping
     public ResponseEntity<ApiResult<List<BookGetsResponse>>> getsBook() {
         return executeApiResult(() -> bookServices.getsBook());
@@ -39,19 +40,19 @@ public class BookController extends ApiBaseController {
         return executeApiResult(() -> bookServices.getBookDetail(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @PostMapping
     public ResponseEntity<ApiResult<Long>> createBook(@Valid @RequestBody BookRequest apiRequest) {
         return executeApiResult(() -> bookServices.createBook(apiRequest));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResult<String>> updateBook(@PathVariable Long id, @Valid @RequestBody BookUpdateRequest apiRequest) {
         return executeApiResult(() -> bookServices.updateBook(id, apiRequest));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResult<String>> deleteBook(@PathVariable Long id) {
         return executeApiResult(() -> bookServices.deleteBook(id));

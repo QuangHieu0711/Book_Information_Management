@@ -12,7 +12,9 @@ import book.backend.controllers.exceptions.UserMessageException;
 import book.backend.models.dtos.borrow.BorrowGetsResponse;
 import book.backend.models.dtos.borrow.BorrowRequest;
 import book.backend.models.dtos.borrowdetail.BorrowDetailGetsResponse;
+import book.backend.models.entities.Book;
 import book.backend.models.entities.Borrow;
+import book.backend.models.entities.BorrowDetail;
 import book.backend.models.entities.User;
 import book.backend.models.global.ApiResult;
 import book.backend.repositories.BookRepository;
@@ -51,6 +53,7 @@ public class BorrowServices implements IBorrowServices {
                         List<BorrowDetailGetsResponse> detailResponses = borrowDetailServices.getsBorrowDetail(borrow.getId()).getData();
                         // Lấy userId an toàn
                         Long userId = (borrow.getUser() != null && borrow.getUser().getId() != null) ? borrow.getUser().getId() : null;
+                        String fullName = (borrow.getUser() != null && borrow.getUser().getFullName() != null) ? borrow.getUser().getFullName() : "";
                         return BorrowGetsResponse.builder()
                                 .id(borrow.getId())
                                 .borrowDate(borrow.getBorrowDate())
@@ -60,6 +63,7 @@ public class BorrowServices implements IBorrowServices {
                                 .createdAt(borrow.getCreatedAt())
                                 .updatedAt(borrow.getUpdatedAt())
                                 .userId(userId)
+                                .fullName(fullName)
                                 .details(detailResponses)
                                 .build();
                     } catch (Exception e) {
@@ -171,9 +175,26 @@ public class BorrowServices implements IBorrowServices {
     @Override
     @Transactional
     public ApiResult<String> deleteBorrow(Long id) {
+        // Tìm phiếu mượn
         Borrow borrow = borrowRepository.findById(id)
                 .orElseThrow(() -> new UserMessageException("Phiếu mượn không tồn tại!"));
+
+        // Tìm tất cả chi tiết phiếu mượn với FETCH JOIN để tránh N+1 query
+        List<BorrowDetail> details = borrowDetailRepository.findByBorrowIdWithFetch(id);
+
+        // Hoàn trả số lượng sách về kho
+        for (BorrowDetail detail : details) {
+            if (detail.getBook() != null) {
+                Book book = detail.getBook();
+                // Cộng lại số lượng sách đã mượn vào số lượng khả dụng
+                book.setQuantityAvailable(book.getQuantityAvailable() + detail.getQuantity());
+                bookRepository.save(book);
+            }
+        }
+
+        // Xóa phiếu mượn (sẽ tự động xóa các chi tiết nhờ cascade)
         borrowRepository.delete(borrow);
-        return ApiResult.success(null, "Xóa phiếu mượn thành công");
+        
+        return ApiResult.success(null, "Xóa phiếu mượn và các chi tiết thành công");
     }
 }

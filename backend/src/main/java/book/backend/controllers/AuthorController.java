@@ -28,31 +28,31 @@ public class AuthorController extends ApiBaseController {
     public AuthorController(IAuthorServices authorServices) {
         this.authorServices = authorServices;
     }
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @GetMapping
     public ResponseEntity<ApiResult<List<AuthorResponse>>> getsAuthor() {
         return executeApiResult(() -> authorServices.getsAuthor());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResult<AuthorResponse>> getAuthorDetail(@PathVariable Long id) {
         return executeApiResult(() -> authorServices.getAuthorDetail(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @PostMapping
     public ResponseEntity<ApiResult<Long>> createAuthor(@Valid @RequestBody AuthorRequest apiRequest) {
         return executeApiResult(() -> authorServices.createAuthor(apiRequest));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResult<String>> updateAuthor(@PathVariable Long id, @Valid @RequestBody AuthorUpdateRequest apiRequest) {
         return executeApiResult(() -> authorServices.updateAuthor(id, apiRequest));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('admin')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResult<String>> deleteAuthor(@PathVariable Long id) {
         return executeApiResult(() -> authorServices.deleteAuthor(id));
